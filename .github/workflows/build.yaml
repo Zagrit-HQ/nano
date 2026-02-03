@@ -1,0 +1,41 @@
+name: Build
+on:
+  push:
+    branches:
+      - "**"
+
+permissions:
+  id-token: write # needed for depot
+
+jobs:
+  build:
+    runs-on: depot-ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Depot CLI
+        uses: depot/setup-action@v1
+
+      - name: Create Docker tags and metadata for the API
+        id: api-meta
+        uses: docker/metadata-action@v5
+        with:
+          bake-target: "api-meta"
+          images: |
+            wito3030/nano
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+
+      - name: Build
+        uses: depot/bake-action@2a7b3650f132c787714b9f582dc74e154faad669
+        with:
+          files: |
+            ./docker-bake.hcl
+            ${{ steps.api-meta.outputs.bake-file }}
+          targets: default
+          provenance: mode=max
+          sbom: true
+          push: false # testing only
+          save: true

@@ -1,8 +1,8 @@
-FROM node:12.5.0-alpine
+FROM node:24-alpine
 
 WORKDIR /app
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile --non-interactive --production && yarn cache clean
+COPY package.json package-lock.json ./
+RUN npm install --omit=dev
 
 COPY src src
 COPY index.js .
