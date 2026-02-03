@@ -29,7 +29,7 @@ jobs:
             type=semver,pattern={{version}}
 
       - name: Build
-        uses: depot/bake-action@2a7b3650f132c787714b9f582dc74e154faad669
+        uses: depot/bake-action@v1
         with:
           files: |
             ./docker-bake.hcl
