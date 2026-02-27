@@ -1,0 +1,30 @@
+name: Simulate Activity
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update server.js with random value
+        run: |
+          RANDOM_VALUE=$(head -c 12 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | head -c 16)
+          sed -i "s|<value>[^<]*</value>|<value>${RANDOM_VALUE}</value>|" src/server.js
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/server.js
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "chore: simulate activity ($(date -u +%Y-%m-%dT%H:%M:%SZ))"
+          git push
