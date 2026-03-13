@@ -15,7 +15,7 @@ app.get("/ready", (_, response) => {
 });
 app.get("/foo", (_, result) => {
   console.log("GET /foo 200");
-  result.json({ message: "baz: <value>SvoanIqb3Zqhi8xd</value>" });
+  result.json({ message: "baz: <value>r6sCmXW2XDZx3s8</value>" });
 });
 app.post("/hello", (request, response) => {
   console.log("POST /hello 200");
