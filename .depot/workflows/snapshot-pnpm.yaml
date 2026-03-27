@@ -37,7 +37,7 @@ jobs:
           pnpm config set store-dir /opt/pnpm-store --global
 
       - name: Prime dependency store
-        run: pnpm install --dev --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Remove git state before snapshot
         run: rm -rf .git
