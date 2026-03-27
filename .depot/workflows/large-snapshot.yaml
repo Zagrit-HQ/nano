@@ -1,0 +1,15 @@
+on:
+  workflow_dispatch:
+
+jobs:
+  large-snapshot:
+    runs-on: depot-ubuntu-latest
+    steps:
+      - name: Create large layer
+        run: |
+          # Write a 10 GB file to produce a very large snapshot layer
+          dd if=/dev/urandom of=/large-layer.bin bs=1M count=10240 status=progress
+
+      - uses: depot/snapshot-action@v1
+        with:
+          image: d58mfwccbf.registry.depot.dev/large-snapshot:latest
