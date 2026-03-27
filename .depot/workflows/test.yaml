@@ -1,12 +1,11 @@
 on:
-  push:
   workflow_dispatch:
 
 jobs:
   test:
     runs-on: depot-ubuntu-latest
     container:
-      image: d58mfwccbf.registry.depot.dev/snapshot-pnpm:latest
+      image: d58mfwccbf.registry.depot.dev/nano-base:latest
     steps:
       - uses: actions/checkout@v4
 
