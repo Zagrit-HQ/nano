@@ -33,8 +33,8 @@ jobs:
       - name: Prime dependency store with dev deps
         run: pnpm install --dev --frozen-lockfile
 
-      - name: Disable sparse checkout
-        run: git sparse-checkout disable
+      - name: Remove git state before snapshot
+        run: rm -rf .git
 
       - name: Snapshot CI image
         uses: depot/snapshot-action@v1
