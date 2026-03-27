@@ -31,7 +31,10 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - name: Configure pnpm store
-        run: pnpm config set store-dir /opt/pnpm-store --global
+        run: |
+          sudo mkdir -p /opt/pnpm-store
+          sudo chown runner:runner /opt/pnpm-store
+          pnpm config set store-dir /opt/pnpm-store --global
 
       - name: Prime dependency store
         run: pnpm install --frozen-lockfile
