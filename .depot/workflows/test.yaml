@@ -8,7 +8,10 @@ jobs:
       image: d58mfwccbf.registry.depot.dev/nano-base:latest
     steps:
       - uses: actions/checkout@v4
-        
+
+      - name: List all files
+        run: ls -la
+
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
 
