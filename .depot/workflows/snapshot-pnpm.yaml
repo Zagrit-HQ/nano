@@ -30,18 +30,14 @@ jobs:
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Prime dependency store with dev deps
-        run: pnpm install --dev --frozen-lockfile
+      - name: Configure pnpm store
+        run: pnpm config set store-dir /opt/pnpm-store --global
 
-      - name: Restore full git state
-        run: |
-          BRANCH=$(git symbolic-ref --short HEAD)
-          ORIGIN=$(git remote get-url origin)
-          rm -rf .git
-          git init
-          git remote add origin "$ORIGIN"
-          git fetch --depth=1 origin "$BRANCH"
-          git reset --hard FETCH_HEAD
+      - name: Prime dependency store
+        run: pnpm install --frozen-lockfile
+
+      - name: Remove git state before snapshot
+        run: rm -rf .git
 
       - name: Snapshot CI image
         uses: depot/snapshot-action@v1
