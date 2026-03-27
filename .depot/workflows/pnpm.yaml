@@ -1,0 +1,30 @@
+on:
+  workflow_dispatch:
+
+jobs:
+  build-image:
+    runs-on: depot-ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ./package.json
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Prime dependency store with dev deps
+        run: pnpm install --dev --frozen-lockfile
+
+      - name: Snapshot CI image
+        uses: depot/snapshot-action@v1
+        with:
+          image: d58mfwccbf.registry.depot.dev/nano-base:latest
