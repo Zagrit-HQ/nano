@@ -8,7 +8,14 @@ jobs:
       image: d58mfwccbf.registry.depot.dev/nano-base:latest
     steps:
       - uses: actions/checkout@v4
+        
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
 
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ./package.json
       - name: Verify node and pnpm are available
         run: |
           node --version
