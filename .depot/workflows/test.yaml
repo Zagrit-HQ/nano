@@ -3,8 +3,8 @@ on:
 
 jobs:
   test:
-    runs-on: depot-ubuntu-latest
-    container:
+    runs-on:
+      size: 2x8
       image: d58mfwccbf.registry.depot.dev/nano-base:latest
     steps:
       - uses: actions/checkout@v4
