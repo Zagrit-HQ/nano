@@ -35,8 +35,12 @@ jobs:
 
       - name: Restore full git state
         run: |
-          git fetch --no-filter --depth=1 origin
-          git sparse-checkout disable
+          BRANCH=$(git symbolic-ref --short HEAD)
+          ORIGIN=$(git remote get-url origin)
+          rm -rf .git
+          git init
+          git remote add origin "$ORIGIN"
+          git fetch --depth=1 origin "$BRANCH"
           git reset --hard FETCH_HEAD
 
       - name: Snapshot CI image
