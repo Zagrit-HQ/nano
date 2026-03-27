@@ -1,0 +1,17 @@
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: depot-ubuntu-latest
+    container:
+      image: d58mfwccbf.registry.depot.dev/snapshot-pnpm:latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run tests
+        run: pnpm test

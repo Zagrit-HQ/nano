@@ -1,0 +1,20 @@
+on:
+  workflow_dispatch:
+    inputs:
+      size_gb:
+        description: Size of the large layer in GB
+        required: true
+        default: "10"
+        type: string
+
+jobs:
+  large-snapshot:
+    runs-on: depot-ubuntu-latest
+    steps:
+      - name: Create large layer
+        run: |
+          dd if=/dev/urandom of=/large-layer.bin bs=1M count=$(( ${{ inputs.size_gb }} * 1024 )) status=progress
+
+      - uses: depot/snapshot-action@v1
+        with:
+          image: d58mfwccbf.registry.depot.dev/large-snapshot:latest
