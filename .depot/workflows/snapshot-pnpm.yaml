@@ -5,10 +5,10 @@ jobs:
   build-image:
     runs-on: depot-ubuntu-latest
     steps:
-#      - name: Checkout repository
-#        uses: actions/checkout@v6
-#        with:
-#          fetch-depth: 1
+      #      - name: Checkout repository
+      #        uses: actions/checkout@v6
+      #        with:
+      #          fetch-depth: 1
 
       - name: Checkout repository (sparse)
         uses: actions/checkout@v6
@@ -32,6 +32,9 @@ jobs:
 
       - name: Prime dependency store with dev deps
         run: pnpm install --dev --frozen-lockfile
+
+      - name: Disable sparse checkout
+        run: git sparse-checkout disable
 
       - name: Snapshot CI image
         uses: depot/snapshot-action@v1
