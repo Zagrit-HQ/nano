@@ -10,6 +10,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Verify node and pnpm are available
+        run: |
+          node --version
+          pnpm --version
+
       - name: Install dependencies
         run: pnpm install
 
