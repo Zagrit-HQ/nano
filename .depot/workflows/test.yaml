@@ -1,0 +1,46 @@
+name: Test
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      failure_chance:
+        description: "Chance of synthetic failure (0-100%)"
+        required: false
+        default: "20"
+        type: string
+
+permissions:
+  id-token: write
+
+jobs:
+  test:
+    runs-on: depot-ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Synthetic failure roll
+        run: |
+          CHANCE=${{ github.event.inputs.failure_chance || '20' }}
+          ROLL=$((RANDOM % 100))
+          echo "Failure chance: ${CHANCE}%, rolled: ${ROLL}"
+          if [ "$ROLL" -lt "$CHANCE" ]; then
+            echo "💥 Synthetic failure triggered"
+            exit 1
+          fi
+          echo "✅ Survived this run"
+
+      - name: Simulate duration
+        run: sleep 20
