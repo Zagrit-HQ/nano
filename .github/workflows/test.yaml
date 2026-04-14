@@ -7,7 +7,7 @@ on:
       failure_chance:
         description: "Chance of synthetic failure (0-100%)"
         required: false
-        default: "0"
+        default: "20"
         type: string
 
 permissions:
@@ -32,9 +32,8 @@ jobs:
         run: npm test
 
       - name: Synthetic failure roll
-        if: ${{ github.event.inputs.failure_chance != '' && github.event.inputs.failure_chance != '0' }}
         run: |
-          CHANCE=${{ github.event.inputs.failure_chance }}
+          CHANCE=${{ github.event.inputs.failure_chance || '20' }}
           ROLL=$((RANDOM % 100))
           echo "Failure chance: ${CHANCE}%, rolled: ${ROLL}"
           if [ "$ROLL" -lt "$CHANCE" ]; then
