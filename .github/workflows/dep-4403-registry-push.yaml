@@ -13,22 +13,92 @@ jobs:
       - name: Set up Depot CLI
         uses: depot/setup-action@v1
 
-      - name: Verify token alias
+      - name: Inspect Depot token sources
         env:
-          DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+          SECRET_DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
         run: |
-          test -n "$DEPOT_TOKEN"
+          inspect_token() {
+            name="$1"
+            value="$2"
+
+            echo "$name length: ${#value}"
+            case "$value" in
+              depot_cijob_*) echo "$name prefix: depot_cijob_" ;;
+              depot_*) echo "$name prefix: depot_other" ;;
+              gh*) echo "$name prefix: github_or_oidc_like" ;;
+              "") echo "$name prefix: empty" ;;
+              *) echo "$name prefix: other" ;;
+            esac
+          }
+
+          inspect_token "inherited DEPOT_TOKEN" "${DEPOT_TOKEN:-}"
+          inspect_token "secret DEPOT_TOKEN" "${SECRET_DEPOT_TOKEN:-}"
+
+      - name: Set up Depot CLI with OIDC
+        uses: depot/setup-action@v1
+        with:
+          oidc: true
+
+      - name: Inspect Depot token after OIDC setup
+        run: |
+          echo "post-setup DEPOT_TOKEN length: ${#DEPOT_TOKEN}"
           case "$DEPOT_TOKEN" in
-            depot_cijob_*) echo "DEPOT_TOKEN is a CI job token" ;;
-            *) echo "DEPOT_TOKEN has unexpected prefix"; exit 1 ;;
+            depot_cijob_*) echo "post-setup DEPOT_TOKEN prefix: depot_cijob_" ;;
+            depot_*) echo "post-setup DEPOT_TOKEN prefix: depot_other" ;;
+            gh*) echo "post-setup DEPOT_TOKEN prefix: github_or_oidc_like" ;;
+            "") echo "post-setup DEPOT_TOKEN prefix: empty" ;;
+            *) echo "post-setup DEPOT_TOKEN prefix: other" ;;
           esac
 
       - name: Push image to named Depot Registry repository
-        env:
-          DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
         run: |
           depot build \
             --project dvnvjx3zsm \
             --tag d58mfwccbf.registry.depot.dev/nano:dep-4403 \
             --push \
             .
+
+  build-push-action:
+    runs-on: depot-ubuntu-24.04
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Write scratch Dockerfile
+        run: |
+          cat > Dockerfile.dep-4403 <<'EOF'
+          FROM scratch
+          COPY index.js /index.js
+          EOF
+
+      - name: Inspect Depot token before build-push-action
+        env:
+          SECRET_DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+        run: |
+          inspect_token() {
+            name="$1"
+            value="$2"
+
+            echo "$name length: ${#value}"
+            case "$value" in
+              depot_cijob_*) echo "$name prefix: depot_cijob_" ;;
+              depot_*) echo "$name prefix: depot_other" ;;
+              gh*) echo "$name prefix: github_or_oidc_like" ;;
+              "") echo "$name prefix: empty" ;;
+              *) echo "$name prefix: other" ;;
+            esac
+          }
+
+          inspect_token "inherited DEPOT_TOKEN" "${DEPOT_TOKEN:-}"
+          inspect_token "secret DEPOT_TOKEN" "${SECRET_DEPOT_TOKEN:-}"
+
+      - name: Build and push with depot/build-push-action
+        uses: depot/build-push-action@v1
+        with:
+          project: dvnvjx3zsm
+          file: Dockerfile.dep-4403
+          tags: d58mfwccbf.registry.depot.dev/nano:dep-4403-build-push-action
+          push: true
