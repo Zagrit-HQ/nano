@@ -99,6 +99,7 @@ jobs:
         uses: depot/build-push-action@v1
         with:
           project: dvnvjx3zsm
+          context: .
           file: Dockerfile.dep-4403
           tags: d58mfwccbf.registry.depot.dev/nano:dep-4403-build-push-action
           push: true
