@@ -1,0 +1,34 @@
+name: DEP-4403 Registry Push
+
+on:
+  workflow_dispatch:
+
+jobs:
+  push:
+    runs-on: depot-ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Depot CLI
+        uses: depot/setup-action@v1
+
+      - name: Verify token alias
+        env:
+          DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+        run: |
+          test -n "$DEPOT_TOKEN"
+          case "$DEPOT_TOKEN" in
+            depot_cijob_*) echo "DEPOT_TOKEN is a CI job token" ;;
+            *) echo "DEPOT_TOKEN has unexpected prefix"; exit 1 ;;
+          esac
+
+      - name: Push image to named Depot Registry repository
+        env:
+          DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+        run: |
+          depot build \
+            --project dvnvjx3zsm \
+            --tag d58mfwccbf.registry.depot.dev/nano:dep-4403 \
+            --push \
+            .

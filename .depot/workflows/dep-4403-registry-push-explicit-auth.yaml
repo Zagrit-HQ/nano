@@ -1,0 +1,32 @@
+name: DEP-4403 Registry Push Explicit Auth
+
+on:
+  workflow_dispatch:
+
+jobs:
+  push:
+    runs-on: depot-ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Depot CLI
+        uses: depot/setup-action@v1
+
+      - name: Push image to named Depot Registry repository
+        env:
+          DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+          DEPOT_PUSH_REGISTRY_USERNAME: x-token
+          DEPOT_PUSH_REGISTRY_PASSWORD: ${{ secrets.DEPOT_TOKEN }}
+        run: |
+          test -n "$DEPOT_TOKEN"
+          cat > Dockerfile.dep-4403 <<'EOF'
+          FROM scratch
+          COPY index.js /index.js
+          EOF
+          depot build \
+            --project dvnvjx3zsm \
+            --file Dockerfile.dep-4403 \
+            --tag d58mfwccbf.registry.depot.dev/nano:dep-4403-explicit-auth \
+            --push \
+            .
