@@ -19,7 +19,10 @@ jobs:
     steps:
       - name: Verify GitHub CLI
         run: |
+          echo "PATH=$PATH"
           command -v gh
+          ls -l /usr/bin/gh
+          /usr/bin/gh --version
           gh --version
 
       - name: Checkout
