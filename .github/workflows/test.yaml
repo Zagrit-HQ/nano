@@ -15,8 +15,13 @@ permissions:
 
 jobs:
   test:
-    runs-on: depot-ubuntu-22.04
+    runs-on: depot-ubuntu-24.04
     steps:
+      - name: Verify GitHub CLI
+        run: |
+          command -v gh
+          gh --version
+
       - name: Checkout
         uses: actions/checkout@v4
 
