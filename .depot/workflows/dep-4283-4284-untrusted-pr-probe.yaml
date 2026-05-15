@@ -65,6 +65,14 @@ jobs:
             exit 1
           }
 
+          case "${DEPOT_CACHE_TOKEN}" in
+            depot_cijob_*) echo "DEPOT_CACHE_TOKEN prefix=depot_cijob_" ;;
+            depot_org_*) echo "DEPOT_CACHE_TOKEN prefix=depot_org_" ;;
+            depot_stack_*) echo "DEPOT_CACHE_TOKEN prefix=depot_stack_" ;;
+            depot_*) echo "DEPOT_CACHE_TOKEN prefix=depot_other" ;;
+            *) echo "DEPOT_CACHE_TOKEN prefix=other" ;;
+          esac
+
       - name: Verify GitHub token is read-only
         env:
           GH_TOKEN: ${{ github.token }}
@@ -109,6 +117,25 @@ jobs:
               exit 1
               ;;
           esac
+
+      - name: Verify direct Connect cache write is denied server-side
+        run: |
+          set -euo pipefail
+
+          key="untrusted-connect-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          code=$(curl -sS -o /tmp/cache-connect.out -w "%{http_code}" \
+            -X POST "https://cache.depot.dev/depot.cache.v1.CacheService/CreateEntry" \
+            -H "Authorization: Bearer ${DEPOT_CACHE_TOKEN}" \
+            -H "X-Depot-Org: ${TURBO_TEAMID}" \
+            -H "Content-Type: application/json" \
+            --data "{\"entryType\":\"generic\",\"key\":\"${key}\"}")
+
+          echo "direct Connect CreateEntry status=${code}"
+          test "${code}" = "403" || {
+            echo "::error::direct CacheService Connect write was not denied for untrusted job"
+            cat /tmp/cache-connect.out || true
+            exit 1
+          }
 
       - name: Verify direct cache write is denied server-side
         run: |
