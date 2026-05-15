@@ -1,0 +1,131 @@
+name: DEP-4283/4284 Untrusted PR Probe
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  checks: write
+  contents: write
+  id-token: write
+  pull-requests: write
+  statuses: write
+
+jobs:
+  probe:
+    runs-on: depot-ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify untrusted classification and secret filtering
+        env:
+          CANARY_SECRET: ${{ secrets.UNTRUSTED_CANARY }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.event.pull_request.base.repo.full_name }}
+        run: |
+          set -euo pipefail
+
+          echo "head=${HEAD_REPO} base=${BASE_REPO}"
+          test -n "${HEAD_REPO}"
+          test -n "${BASE_REPO}"
+          test "${HEAD_REPO}" != "${BASE_REPO}" || {
+            echo "::error::Expected a cross-repo pull_request"
+            exit 1
+          }
+
+          test -z "${CANARY_SECRET:-}" || {
+            echo "::error::UNTRUSTED_CANARY was exposed to the fork PR job"
+            exit 1
+          }
+
+          test -z "${DEPOT_TOKEN:-}" || {
+            echo "::error::DEPOT_TOKEN was exposed to the fork PR job"
+            exit 1
+          }
+
+          test "${DEPOT_CACHE_READ_ONLY:-}" = "1" || {
+            echo "::error::DEPOT_CACHE_READ_ONLY was not set for the fork PR job"
+            exit 1
+          }
+
+          test -n "${DEPOT_CACHE_HOST:-}" || {
+            echo "::error::DEPOT_CACHE_HOST was not set"
+            exit 1
+          }
+
+          test -n "${DEPOT_CACHE_TOKEN:-}" || {
+            echo "::error::DEPOT_CACHE_TOKEN was not set"
+            exit 1
+          }
+
+          test -n "${TURBO_TEAMID:-}" || {
+            echo "::error::TURBO_TEAMID was not set"
+            exit 1
+          }
+
+      - name: Verify GitHub token is read-only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          encoded=$(printf 'probe' | base64 | tr -d '\n')
+          set +e
+          gh api \
+            -X PUT \
+            "repos/${GITHUB_REPOSITORY}/contents/untrusted-probe-${GITHUB_RUN_ID}.txt" \
+            -f message="untrusted probe" \
+            -f content="${encoded}" >/tmp/github-write.out 2>/tmp/github-write.err
+          status=$?
+          set -e
+
+          echo "github contents write exit=${status}"
+          if [ "${status}" -eq 0 ]; then
+            echo "::error::github.token unexpectedly wrote repository contents"
+            exit 1
+          fi
+
+      - name: Verify local cache write is non-fatal
+        run: |
+          set -euo pipefail
+
+          key="untrusted-local-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          printf 'probe' > payload.txt
+          code=$(curl -sS -o /tmp/cache-local.out -w "%{http_code}" \
+            -X PUT "${DEPOT_CACHE_HOST}/${key}" \
+            -H "Authorization: Bearer ${DEPOT_CACHE_TOKEN}" \
+            -H "X-Depot-Org: ${TURBO_TEAMID}" \
+            -H "User-Agent: golang" \
+            --data-binary @payload.txt)
+
+          echo "local cache write status=${code}"
+          case "${code}" in
+            200|201|204) ;;
+            *)
+              echo "::error::local read-only cache proxy write was fatal or rejected unexpectedly"
+              cat /tmp/cache-local.out || true
+              exit 1
+              ;;
+          esac
+
+      - name: Verify direct cache write is denied server-side
+        run: |
+          set -euo pipefail
+
+          key="untrusted-direct-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          printf 'probe' > payload.txt
+          code=$(curl -sS -o /tmp/cache-direct.out -w "%{http_code}" \
+            -X PUT "https://cache.depot.dev/${key}" \
+            -H "Authorization: Bearer ${DEPOT_CACHE_TOKEN}" \
+            -H "X-Depot-Org: ${TURBO_TEAMID}" \
+            -H "User-Agent: golang" \
+            --data-binary @payload.txt)
+
+          echo "direct cache write status=${code}"
+          test "${code}" = "403" || {
+            echo "::error::direct CacheService write was not denied for untrusted job"
+            cat /tmp/cache-direct.out || true
+            exit 1
+          }
