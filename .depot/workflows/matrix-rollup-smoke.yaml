@@ -92,6 +92,7 @@ jobs:
     steps:
       - name: Report shard
         run: |
+          echo "rerun_marker=rollup-disabled"
           echo "workflow=${{ github.workflow }}"
           echo "job=${{ github.job }}"
           echo "shard=${{ matrix.shard }}"
