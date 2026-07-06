@@ -1,0 +1,6 @@
+FROM d58mfwccbf.registry.depot.dev/mg5z43wc7m:xfcqr26qkk
+
+ENV hello world
+
+EXPOSE 8080
+CMD ["node", "index.js"]
