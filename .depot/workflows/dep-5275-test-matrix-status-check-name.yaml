@@ -1,33 +1,26 @@
-name: Reusable matrix test
+# .github/workflows/matrix-status-check.yml
+name: Matrix status check
 
 on:
-  workflow_call:
-    inputs:
-      region:
-        required: true
-        type: string
-      tier:
-        required: true
-        type: string
+  pull_request:
 
 jobs:
-  test:
-    # Explicit compact name: no generated "(shard=..., runtime=...)" suffix.
-    name: test ${{ inputs.region }}-${{ inputs.tier }}-s${{ matrix.shard }}-${{ matrix.runtime }}
+  schema:
+    # Explicit, simplified status-check name.
+    name: schema-${{ matrix.customer }}-${{ matrix.database }}
 
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
-        runtime: [node20, node22]
+        customer: [main, enterprise]
+        database: [mysql, postgres]
+        environment: [dev, production]
 
     runs-on: ubuntu-latest
 
     steps:
-      - name: Show matrix values
+      - name: Display combination
         run: |
-          echo "region=${{ inputs.region }}"
-          echo "tier=${{ inputs.tier }}"
-          echo "shard=${{ matrix.shard }}"
-          echo "runtime=${{ matrix.runtime }}"
-          echo 'matrix=${{ toJSON(matrix) }}'
+          echo "customer=${{ matrix.customer }}"
+          echo "database=${{ matrix.database }}"
+          echo "environment=${{ matrix.environment }}"
