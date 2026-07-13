@@ -1,0 +1,33 @@
+name: Reusable matrix test
+
+on:
+  workflow_call:
+    inputs:
+      region:
+        required: true
+        type: string
+      tier:
+        required: true
+        type: string
+
+jobs:
+  test:
+    # Explicit compact name: no generated "(shard=..., runtime=...)" suffix.
+    name: test ${{ inputs.region }}-${{ inputs.tier }}-s${{ matrix.shard }}-${{ matrix.runtime }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+        runtime: [node20, node22]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Show matrix values
+        run: |
+          echo "region=${{ inputs.region }}"
+          echo "tier=${{ inputs.tier }}"
+          echo "shard=${{ matrix.shard }}"
+          echo "runtime=${{ matrix.runtime }}"
+          echo 'matrix=${{ toJSON(matrix) }}'
