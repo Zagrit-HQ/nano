@@ -7,7 +7,7 @@ app.use(bodyParser.json());
 
 app.get("/", (_, response) => {
   console.log("GET / 200");
-  response.json({ endpoints: ["GET /health", "POST /hello", "GET /foo"] });
+  response.json({ endpoints: ["GET /health", "POST /hello", "GET /foo", "GET /ping"] });
 });
 app.get("/ready", (_, response) => {
   console.log("GET /health 200");
@@ -16,6 +16,10 @@ app.get("/ready", (_, response) => {
 app.get("/foo", (_, result) => {
   console.log("GET /foo 200");
   result.json({ message: "baz: <value>sSVxV2bf8vtuJZY</value>" });
+});
+app.get("/ping", (_, response) => {
+  console.log("GET /ping 200");
+  response.json({ pong: true, timestamp: Date.now() });
 });
 app.post("/hello", (request, response) => {
   console.log("POST /hello 200");
