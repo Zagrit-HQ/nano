@@ -1,0 +1,111 @@
+name: Matrix Rollup Smoke
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      fail_shard:
+        description: "Optional shard number to fail, 1-60"
+        required: false
+        default: ""
+        type: string
+      sleep_seconds:
+        description: "Seconds each shard should sleep"
+        required: false
+        default: "5"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  matrix-rollup-smoke:
+    name: Matrix Rollup Smoke (${{ matrix.shard }})
+    runs-on: depot-ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 60
+      matrix:
+        shard:
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          - 9
+          - 10
+          - 11
+          - 12
+          - 13
+          - 14
+          - 15
+          - 16
+          - 17
+          - 18
+          - 19
+          - 20
+          - 21
+          - 22
+          - 23
+          - 24
+          - 25
+          - 26
+          - 27
+          - 28
+          - 29
+          - 30
+          - 31
+          - 32
+          - 33
+          - 34
+          - 35
+          - 36
+          - 37
+          - 38
+          - 39
+          - 40
+          - 41
+          - 42
+          - 43
+          - 44
+          - 45
+          - 46
+          - 47
+          - 48
+          - 49
+          - 50
+          - 51
+          - 52
+          - 53
+          - 54
+          - 55
+          - 56
+          - 57
+          - 58
+          - 59
+          - 60
+
+    steps:
+      - name: Report shard
+        run: |
+          echo "rerun_marker=rollup-disabled"
+          echo "workflow=${{ github.workflow }}"
+          echo "job=${{ github.job }}"
+          echo "shard=${{ matrix.shard }}"
+
+      - name: Optional synthetic failure
+        run: |
+          FAIL_SHARD="${{ github.event.inputs.fail_shard || '' }}"
+          if [ -n "$FAIL_SHARD" ] && [ "$FAIL_SHARD" = "${{ matrix.shard }}" ]; then
+            echo "Failing requested shard ${FAIL_SHARD}"
+            exit 1
+          fi
+
+      - name: Simulate work
+        run: |
+          SLEEP_SECONDS="${{ github.event.inputs.sleep_seconds || '5' }}"
+          sleep "$SLEEP_SECONDS"
